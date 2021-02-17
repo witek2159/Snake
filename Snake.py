@@ -3,11 +3,28 @@ import time
 import random
 import pygame, sys
 from pygame.locals import *
+Snake_color = 0
+Background_color = 0
+Font_color = 0
+Food_color = 0
+
+#define some colors
+Black = (0,0,0,)
+Grey = (100,100,100)
+White =(255,255,255)
+Green = (10,190,30)
+Red = (255,0,0)
+#define colors of indyvidual elements
+Snake_color = Green
+Background_color = Black
+Font_color = White
+Food_color = Red
 
 # define a variable to control the main loop
 running = True
 
 Movment_Flag = True
+
 
 SEG_size = 25
 SEG_spacing = 5
@@ -25,19 +42,20 @@ class Food:
     Ypos = 0
 
     def __init__(self):
-        randx = random.randint(0,17)
-        randy = random.randint(0,17)
+        randx = random.randint(0,16)
+        randy = random.randint(0,16)
         self.Xpos = (randx * 25) + (randx * 5)
         self.Ypos = (randy * 25) + (randy * 5)
 
     def draw(self,screen):
-        pygame.draw.rect(screen,(250,0,0),(self.Xpos,self.Ypos,SEG_size,SEG_size))
+        pygame.draw.rect(screen,Food_color,(self.Xpos,self.Ypos,SEG_size,SEG_size))
 
     def food_eaten(self):
-        randx = random.randint(0,17)
-        randy = random.randint(0,17)
+        randx = random.randint(0,16)
+        randy = random.randint(0,16)
         self.Xpos = (randx * 25) + (randx * 5)
         self.Ypos = (randy * 25) + (randy * 5)
+
 
 FOOD = Food()
 
@@ -54,7 +72,7 @@ class Segment:
 
     
     def draw(self,screen):
-        pygame.draw.rect(screen,(100,100,100),(self.Xpos,self.Ypos,SEG_size,SEG_size))
+        pygame.draw.rect(screen,Snake_color,(self.Xpos,self.Ypos,SEG_size,SEG_size))
 
     def update(self,X,Y):
         self.Last_Xpos = self.Xpos
@@ -66,7 +84,10 @@ class Segment:
 
 #snake class
 class Snake:
+    #global variables
+
     Alive = True
+    Color_flip_flop = True
     SEG = []
     Xpos = 0
     Ypos = 0
@@ -88,6 +109,10 @@ class Snake:
             self.SEG[i].draw(screen)
 
     def update(self):
+        global Snake_color
+        global Background_color
+        global Font_color
+        global Food_color
         #move snake head in set direction
         if self.direction == 'R':
             self.SEG[0].update(self.SEG[0].Xpos+SEG_size+SEG_spacing,self.SEG[0].Ypos)
@@ -107,6 +132,24 @@ class Snake:
             for i in range(self.Snake_length-1):
                 if self.SEG[0].Xpos == self.SEG[i+1].Xpos and self.SEG[0].Ypos == self.SEG[i+1].Ypos:
                     self.Alive = False
+        #flip colors every 10 points
+            if self.Snake_length % 10 == 0:
+                if Background_color == Black and self.Color_flip_flop:
+                    Snake_color = Black
+                    Background_color = Green
+                    Font_color = White
+
+                    self.Color_flip_flop = False
+
+                elif self.Color_flip_flop:
+                    Snake_color = Green
+                    Background_color = Black
+                    Font_color = White
+
+                    self.Color_flip_flop = False
+            else:
+                self.Color_flip_flop = True
+
 
     def food_check(self,fx,fy):
         if self.SEG[0].Xpos == fx and self.SEG[0].Ypos == fy:
@@ -125,12 +168,14 @@ def main():
     # initialize the pygame module
     pygame.init()
     # set caption
-    pygame.display.set_caption("Snake v. 0.0.4")
+    pygame.display.set_caption("Snake v. 0.0.5")
 
      
     # create a surface on screen that has the size of 240 x 180
     screen = pygame.display.set_mode((505,505))
-
+    #define a font
+    font = pygame.font.SysFont(None, 35)
+    #define snake object
     SNK = Snake(0,0) 
 
     # main loop
@@ -142,10 +187,12 @@ def main():
             #fill screen with white color
             if SNK.Alive == False:
                 quit()
-            screen.fill((255,255,255))
+            screen.fill(Background_color)
             #update screen
             FOOD.draw(screen)
-            SNK.draw(screen)  
+            SNK.draw(screen) 
+            Score = font.render(str(SNK.Snake_length), True,Font_color)
+            screen.blit(Score, (10, 10)) 
             SNK.update()   
             SNK.food_check(FOOD.Xpos,FOOD.Ypos) 
             pygame.display.update()
