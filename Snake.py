@@ -3,10 +3,21 @@ import time
 import random
 import pygame, sys
 from pygame.locals import *
-Snake_color = 0
-Background_color = 0
-Font_color = 0
-Food_color = 0
+
+#define variable storing money count
+Money = ""
+#create if doesn't exist and initialise save file
+file = open("save.sn","a")
+file = open("save.sn","r")
+if file.read() == "":
+    file = open("save.sn","w")
+    file.write("0")
+    file.close()
+
+file = open("save.sn","r")
+Money = file.read()
+file.close()
+print(Money)
 
 #define some colors
 Black = (0,0,0,)
@@ -33,6 +44,10 @@ SEG_spacing = 5
 def quit():
     # change the value to False, to exit the main loop
     running = False
+    #save your money count to file
+    file = open("save.sn","w")
+    file.write(Money)
+    file.close()
     pygame.quit()
     sys.exit()
 
@@ -135,27 +150,33 @@ class Snake:
         #flip colors every 10 points
             if self.Snake_length % 10 == 0:
                 if Background_color == Black and self.Color_flip_flop:
-                    Snake_color = Black
-                    Background_color = Green
-                    Font_color = White
+                    SNC = Snake_color
+                    Snake_color = Background_color
+                    Background_color = SNC
+
 
                     self.Color_flip_flop = False
 
-                elif self.Color_flip_flop:
-                    Snake_color = Green
-                    Background_color = Black
-                    Font_color = White
-
-                    self.Color_flip_flop = False
             else:
                 self.Color_flip_flop = True
 
 
     def food_check(self,fx,fy):
+        Food_Under_Snake = True
         if self.SEG[0].Xpos == fx and self.SEG[0].Ypos == fy:
+            global Money
             self.SEG.append(Segment(-SEG_size,-SEG_size))
             self.Snake_length += 1
             FOOD.food_eaten()
+            while Food_Under_Snake == True:
+                FN = False
+                for i in range(self.Snake_length):
+                    if self.SEG[i].Xpos == FOOD.Xpos and self.SEG[i].Ypos == FOOD.Ypos:
+                        FOOD.food_eaten()
+                        FN = True
+                if FN == False:
+                    Food_Under_Snake = False
+            Money = str(int(Money) + 1*int(self.Snake_length/10)+1)
 
     def change_direction(self,d):
         self.direction = d
@@ -168,7 +189,7 @@ def main():
     # initialize the pygame module
     pygame.init()
     # set caption
-    pygame.display.set_caption("Snake v. 0.0.5")
+    pygame.display.set_caption("Snake v. 0.0.6")
 
      
     # create a surface on screen that has the size of 240 x 180
@@ -191,10 +212,10 @@ def main():
             #update screen
             FOOD.draw(screen)
             SNK.draw(screen) 
-            Score = font.render(str(SNK.Snake_length), True,Font_color)
-            screen.blit(Score, (10, 10)) 
-            SNK.update()   
+            screen.blit(font.render("S: "+str(SNK.Snake_length), True,Font_color), (10, 10)) 
+            screen.blit(font.render("M: "+str(Money), True,Font_color), (10, 50)) 
             SNK.food_check(FOOD.Xpos,FOOD.Ypos) 
+            SNK.update()   
             pygame.display.update()
         else:
             delay +=1
